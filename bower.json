@@ -1,9 +1,18 @@
 {
   "name": "purescript-fix",
+  "description": "Fix and MonadFix type classes for Purescript",
+  "homepage": "https://github.com/VesaKarvonen/purescript-fix",
   "version": "0.0.1",
-  "moduleType": [
-    "node"
+  "keywords": [
+    "purescript",
+    "fix",
+    "monadfix"
   ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/VesaKarvonen/purescript-fix.git"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
