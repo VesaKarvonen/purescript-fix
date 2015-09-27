@@ -13,7 +13,10 @@ class (Monad m) <= MonadFix m where
   liftFix :: forall a. FixEff a -> m a
 
 mfix :: forall a m. (Fix a, MonadFix m) => (a -> m a) -> m a
-mfix a2aM = do
+mfix = mfix' proxy liftFix
+
+mfix' :: forall a m. (Monad m) => FixEff (Proxy a) -> (forall b. FixEff b -> m b) -> (a -> m a) -> m a
+mfix' proxy liftFix a2aM = do
   aP <- liftFix proxy
   a <- a2aM aP.value
   liftFix (aP.tie a)

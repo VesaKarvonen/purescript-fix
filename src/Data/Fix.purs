@@ -3,6 +3,7 @@ module Data.Fix
   , FixEff()
   , Proxy()
   , Fix, proxy, fix
+  , fix', proxyTuple, proxyIso
   ) where
 
 --
@@ -23,7 +24,7 @@ class Fix a where
   proxy :: FixEff (Proxy a)
 
 fix :: forall a. (Fix a) => (a -> a) -> FixEff a
-fix a2a = fix' proxy a2a
+fix = fix' proxy
 
 --
 
