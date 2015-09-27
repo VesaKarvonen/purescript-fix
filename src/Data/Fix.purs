@@ -15,7 +15,7 @@ import Prelude
 --
 
 foreign import data FIX :: !
-type FixEff a = Eff (fix :: FIX) a
+type FixEff a = forall e. Eff (fix :: FIX | e) a
 type Proxy a = {value :: a, tie :: a -> FixEff Unit}
 
 class Fix a where
@@ -24,10 +24,10 @@ class Fix a where
 fix :: forall a. (Fix a) => (a -> a) -> FixEff a
 fix a2a = fix' proxy a2a
 
+--
+
 instance fixTuple :: (Fix a, Fix b) => Fix (Tuple a b) where
   proxy = proxyTuple proxy proxy
-
---
 
 fix' :: forall a. FixEff (Proxy a) -> (a -> a) -> FixEff a
 fix' aPE a2a = do

@@ -3,7 +3,7 @@ module Test.Main where
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
 import Control.Monad.Eff.Console (log)
-import Control.Monad.Eff.Exception (throwException, error)
+import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.MonadFix
 import Data.Fix
 import Data.Lazy
@@ -76,11 +76,16 @@ oneTwoThrees = do
       pure (Tuple xs (Tuple ys zs))
   pure xs
 
+testEq :: forall a e. (Eq a) => a -> a -> Eff (err :: EXCEPTION | e) Unit
+testEq actual expected =
+  if actual == expected
+    then pure unit
+    else throwException $ error $ "Invalid result"
+
 main = do
+  xs <- fix \xs -> defer \_ -> SCons 1 xs
+  testEq (stake 5 xs) (Cons 1 (Cons 1 (Cons 1 (Cons 1 (Cons 1 Nil)))))
+
   case force (case oneTwoThrees of Maybel x -> x) of
-    Just xs ->
-      if stake 5 xs == Cons 1 (Cons 2 (Cons 3 (Cons 1 (Cons 2 Nil))))
-        then pure unit
-        else throwException $ error $ "Invalid result"
-    Nothing ->
-      throwException $ error $ "Got nothing"
+    Just xs -> testEq (stake 5 xs) (Cons 1 (Cons 2 (Cons 3 (Cons 1 (Cons 2 Nil)))))
+    Nothing -> throwException $ error $ "Got nothing"
