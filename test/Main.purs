@@ -7,8 +7,7 @@ import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.MonadFix
 import Data.Fix
 import Data.Lazy
-import qualified Data.List as S
-import qualified Data.List.Lazy as L
+import Data.List.Lazy
 import Data.Maybe
 import Data.Tuple
 import Prelude
@@ -40,13 +39,13 @@ instance maybelLiftFix :: MonadFix Maybel where
 
 --
 
-oneTwoThrees :: Maybel (L.List Int)
+oneTwoThrees :: Maybel (List Int)
 oneTwoThrees = do
   Tuple xs _ <-
     mfix \(Tuple xs (Tuple ys zs)) -> do
-      xs <- pure (L.cons 1 ys)
-      ys <- pure (L.cons 2 zs)
-      zs <- pure (L.cons 3 xs)
+      xs <- pure (cons 1 ys)
+      ys <- pure (cons 2 zs)
+      zs <- pure (cons 3 xs)
       pure (Tuple xs (Tuple ys zs))
   pure xs
 
@@ -56,13 +55,13 @@ testEq actual expected =
     then pure unit
     else throwException $ error $ "Invalid result"
 
-takeAsStrict :: forall a. Int -> L.List a -> S.List a
-takeAsStrict n xs = L.fromList (L.take n xs)
+takeAsArray :: forall a. Int -> List a -> Array a
+takeAsArray n xs = fromList (take n xs)
 
 main = do
-  xs <- fix \xs -> L.cons 1 xs
-  testEq (takeAsStrict 5 xs) (S.Cons 1 (S.Cons 1 (S.Cons 1 (S.Cons 1 (S.Cons 1 S.Nil)))))
+  xs <- fix \xs -> cons 1 xs
+  testEq (takeAsArray 5 xs) [1, 1, 1, 1, 1]
 
   case force (case oneTwoThrees of Maybel x -> x) of
-    Just xs -> testEq (takeAsStrict 5 xs) (S.Cons 1 (S.Cons 2 (S.Cons 3 (S.Cons 1 (S.Cons 2 S.Nil)))))
+    Just xs -> testEq (takeAsArray 5 xs) [1, 2, 3, 1, 2]
     Nothing -> throwException $ error $ "Got nothing"
