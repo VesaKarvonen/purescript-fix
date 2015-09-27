@@ -9,6 +9,7 @@ module Data.Fix
 
 import Control.Monad.Eff
 import Data.Lazy
+import qualified Data.List.Lazy as L
 import Data.Tuple
 import Prelude
 
@@ -57,3 +58,22 @@ foreign import lazyProxy :: forall a. FixEff (Proxy (Lazy a))
 
 instance lazyFix :: Fix (Lazy a) where
   proxy = lazyProxy
+
+--
+
+valueIso :: forall a b. (a -> b) -> (b -> a) -> Proxy a -> b
+valueIso a2b b2a aP = a2b aP.value
+
+tieIso :: forall a b. (a -> b) -> (b -> a) -> Proxy a -> b -> FixEff Unit
+tieIso a2b b2a aP b = do
+  aP.tie (b2a b)
+
+proxyIso :: forall a b. (a -> b) -> (b -> a) -> FixEff (Proxy a) -> FixEff (Proxy b)
+proxyIso a2b b2a aPE = do
+  aP <- aPE
+  pure {value: valueIso a2b b2a aP, tie: tieIso a2b b2a aP}
+
+--
+
+instance lazyListFix :: Fix (L.List a) where
+  proxy = proxyIso L.List L.runList proxy

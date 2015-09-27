@@ -21,10 +21,12 @@
   "dependencies": {
     "purescript-eff": "^0.1.1",
     "purescript-lazy": "^0.4.0",
+    "purescript-lists": "^0.7.4",
     "purescript-tuples": "^0.4.0"
   },
   "devDependencies": {
     "purescript-console": "^0.1.1",
-    "purescript-exceptions": "^0.3.0"
+    "purescript-exceptions": "^0.3.0",
+    "purescript-unfoldable": "0.4.0"
   }
 }

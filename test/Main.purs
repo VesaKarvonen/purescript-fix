@@ -7,6 +7,8 @@ import Control.Monad.Eff.Exception (EXCEPTION(), throwException, error)
 import Control.Monad.MonadFix
 import Data.Fix
 import Data.Lazy
+import qualified Data.List as S
+import qualified Data.List.Lazy as L
 import Data.Maybe
 import Data.Tuple
 import Prelude
@@ -38,41 +40,13 @@ instance maybelLiftFix :: MonadFix Maybel where
 
 --
 
-data List a = Nil | Cons a (List a)
-
-instance listEq :: (Eq a) => Eq (List a) where
-  eq (Cons x xs) (Cons y ys) = eq x y && eq xs ys
-  eq Nil         Nil         = true
-  eq Nil         (Cons _ _)  = false
-  eq (Cons _ _)  Nil         = false
-
-data StreamCons a = SNil
-                  | SCons a (Stream a)
-type Stream a = Lazy (StreamCons a)
-
-sempty :: forall a. Stream a
-sempty = defer \_ -> SNil
-
-scons :: forall a. a -> Stream a -> Stream a
-scons x xs = defer \_ -> SCons x xs
-
-stake :: forall a. Int -> Stream a -> List a
-stake n xs =
-  if n <= 0
-    then Nil
-    else case force xs of
-           SNil -> Nil
-           SCons x xs -> Cons x (stake (n-1) xs)
-
---
-
-oneTwoThrees :: Maybel (Stream Int)
+oneTwoThrees :: Maybel (L.List Int)
 oneTwoThrees = do
   Tuple xs _ <-
     mfix \(Tuple xs (Tuple ys zs)) -> do
-      xs <- pure (scons 1 ys)
-      ys <- pure (scons 2 zs)
-      zs <- pure (scons 3 xs)
+      xs <- pure (L.cons 1 ys)
+      ys <- pure (L.cons 2 zs)
+      zs <- pure (L.cons 3 xs)
       pure (Tuple xs (Tuple ys zs))
   pure xs
 
@@ -82,10 +56,13 @@ testEq actual expected =
     then pure unit
     else throwException $ error $ "Invalid result"
 
+takeAsStrict :: forall a. Int -> L.List a -> S.List a
+takeAsStrict n xs = L.fromList (L.take n xs)
+
 main = do
-  xs <- fix \xs -> defer \_ -> SCons 1 xs
-  testEq (stake 5 xs) (Cons 1 (Cons 1 (Cons 1 (Cons 1 (Cons 1 Nil)))))
+  xs <- fix \xs -> L.cons 1 xs
+  testEq (takeAsStrict 5 xs) (S.Cons 1 (S.Cons 1 (S.Cons 1 (S.Cons 1 (S.Cons 1 S.Nil)))))
 
   case force (case oneTwoThrees of Maybel x -> x) of
-    Just xs -> testEq (stake 5 xs) (Cons 1 (Cons 2 (Cons 3 (Cons 1 (Cons 2 Nil)))))
+    Just xs -> testEq (takeAsStrict 5 xs) (S.Cons 1 (S.Cons 2 (S.Cons 3 (S.Cons 1 (S.Cons 2 S.Nil)))))
     Nothing -> throwException $ error $ "Got nothing"
