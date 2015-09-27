@@ -1,0 +1,19 @@
+{
+  "name": "purescript-fix",
+  "version": "0.0.1",
+  "moduleType": [
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-lazy": "0.4.0",
+    "purescript-tuples": "0.4.0",
+    "purescript-eff": "0.1.1",
+    "purescript-console": "0.1.1"
+  }
+}
