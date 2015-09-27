@@ -2,7 +2,8 @@ module Test.Main where
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
-import Control.Monad.Eff.Console
+import Control.Monad.Eff.Console (log)
+import Control.Monad.Eff.Exception (throwException, error)
 import Control.Monad.MonadFix
 import Data.Fix
 import Data.Lazy
@@ -13,8 +14,6 @@ import Prelude
 --
 
 newtype Maybel a = Maybel (Lazy (Maybe a))
-
---
 
 instance maybelApplicative :: Applicative Maybel where
   pure a = Maybel (defer \_ -> Just a)
@@ -41,9 +40,11 @@ instance maybelLiftFix :: MonadFix Maybel where
 
 data List a = Nil | Cons a (List a)
 
-instance listShow :: (Show a) => Show (List a) where
-  show Nil = "Nil"
-  show (Cons x xs) = "Cons " ++ show x ++ " (" ++ show xs ++ ")"
+instance listEq :: (Eq a) => Eq (List a) where
+  eq (Cons x xs) (Cons y ys) = eq x y && eq xs ys
+  eq Nil         Nil         = true
+  eq Nil         (Cons _ _)  = false
+  eq (Cons _ _)  Nil         = false
 
 data StreamCons a = SNil
                   | SCons a (Stream a)
@@ -65,17 +66,21 @@ stake n xs =
 
 --
 
-ones :: Maybel (Stream Int)
-ones = do
-  Tuple xs ys <-
-    mfix \(Tuple xs ys) -> do
-            xs <- pure (scons 1 ys)
-            ys <- pure (scons 2 xs)
-            pure (Tuple xs ys)
+oneTwoThrees :: Maybel (Stream Int)
+oneTwoThrees = do
+  Tuple xs _ <-
+    mfix \(Tuple xs (Tuple ys zs)) -> do
+      xs <- pure (scons 1 ys)
+      ys <- pure (scons 2 zs)
+      zs <- pure (scons 3 xs)
+      pure (Tuple xs (Tuple ys zs))
   pure xs
 
 main = do
-  case force (case ones of Maybel x -> x) of
-    Just xs -> log (show (stake 10 xs))
-    Nothing -> log "No show"
-  log "You should add some tests."
+  case force (case oneTwoThrees of Maybel x -> x) of
+    Just xs ->
+      if stake 5 xs == Cons 1 (Cons 2 (Cons 3 (Cons 1 (Cons 2 Nil))))
+        then pure unit
+        else throwException $ error $ "Invalid result"
+    Nothing ->
+      throwException $ error $ "Got nothing"

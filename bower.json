@@ -2,7 +2,6 @@
   "name": "purescript-fix",
   "description": "Fix and MonadFix type classes for Purescript",
   "homepage": "https://github.com/VesaKarvonen/purescript-fix",
-  "version": "0.0.1",
   "keywords": [
     "purescript",
     "fix",
@@ -20,11 +19,12 @@
     "output"
   ],
   "dependencies": {
-    "purescript-lazy": "0.4.0",
-    "purescript-tuples": "0.4.0",
-    "purescript-eff": "0.1.1"
+    "purescript-eff": "^0.1.1",
+    "purescript-lazy": "^0.4.0",
+    "purescript-tuples": "^0.4.0"
   },
   "devDependencies": {
-    "purescript-console": "0.1.1"
+    "purescript-console": "^0.1.1",
+    "purescript-exceptions": "^0.3.0"
   }
 }
