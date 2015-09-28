@@ -15,14 +15,14 @@ import Prelude
 --
 
 newtype Maybel a = Maybel (Lazy (Maybe a))
+runMaybel (Maybel x) = x
 
 instance maybelApplicative :: Applicative Maybel where
-  pure a = Maybel (defer \_ -> Just a)
+  pure = pure >>> pure >>> Maybel
 
 instance maybelBind :: Bind Maybel where
-  bind (Maybel aM) a2bM =
-    Maybel (defer \_ ->
-            force aM >>= \a -> case a2bM a of Maybel bM -> force bM)
+  bind (Maybel aOL) a2bOL =
+    Maybel (aOL >>= \aO -> pure (aO >>= a2bOL >>> runMaybel >>> force))
 
 instance maybelFunctor :: Functor Maybel where
   map = liftM1
@@ -33,9 +33,7 @@ instance maybelApply :: Apply Maybel where
 instance maybelMonad :: Monad Maybel
 
 instance maybelLiftFix :: MonadFix Maybel where
-  liftFix xF =
-    Maybel (do x <- liftFix xF
-               pure (pure x))
+  liftFix xF = Maybel (liftFix xF >>= pure >>> pure)
 
 --
 
@@ -62,6 +60,6 @@ main = do
   xs <- fix \xs -> cons 1 xs
   testEq (takeAsArray 5 xs) [1, 1, 1, 1, 1]
 
-  case force (case oneTwoThrees of Maybel x -> x) of
+  case force (runMaybel oneTwoThrees) of
     Just xs -> testEq (takeAsArray 5 xs) [1, 2, 3, 1, 2]
     Nothing -> throwException $ error $ "Got nothing"
